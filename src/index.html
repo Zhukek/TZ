@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TZ</title>
+  <script src="https://unpkg.com/vue@next"></script>
+  <script type="text/javascript" src="https://vk.com/js/api/openapi.js?168"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="font-sans w-full bg-orange-900 h-screen min-w-[900px]">
+  <div id="app" class="bg-orange-200 w-5/6 h-5/6 mx-auto mt-8 rounded-lg shadow-lg flex flex-row justify-evenly items-center">
+    <div class="bg-orange-100 w-5/12 h-5/6 rounded-lg shadow-lg">
+      <h2 class="w-full bg-amber-100 rounded-t-lg text-lg font-semibold text-center h-[10%] uppercase">friend list</h2>
+      <ul v-on:dragover="allowDrop" v-on:drop="drop" class="h-[70%] overflow-y-auto">
+        <li v-for="(user, index) in users" draggable="true" v-on:dragstart="dragStart" v-on:dragend="dragEnd" :data-id="index + '_loaded'"
+        class="w-[95%] h-[40px] rounded-2xl bg-amber-50 mx-auto my-2 flex flex-row gap-2 overflow-hidden">
+          <img draggable="false" class="h-full rounded-2xl" :src="user.photo">
+          <p class="text-lg font-semibold whitespace-nowrap">{{user.name}} {{user.secondname}}</p>
+        </li>
+      </ul>
+      <div class="w-full bg-amber-100 rounded-b-lg h-[20%] flex items-center justify-evenly">
+        <button v-if="vkButton" type="button" @click="vkClick" class="h-[50%] w-4/5 rounded bg-sky-900 hover:shadow-lg transition-all hover:bg-cyan-700 text-white font-bold text-center text-lg active:bg-cyan-600">VK login in</button>
+      </div>
+    </div>
+
+    <div class="bg-orange-100 w-5/12 h-5/6 rounded-lg shadow-lg">
+      <h2 class="w-full bg-amber-100 rounded-t-lg text-lg font-semibold text-center h-[10%] uppercase">selected friends</h2>
+      <ul v-on:dragover="allowDrop" v-on:drop="drop" data-list="selected" class="h-[70%] overflow-y-auto">
+        <li v-for="(user, index) in selectedFriends" draggable="true" v-on:dragstart="dragStart" v-on:dragend="dragEnd" :data-id="index + '_selected'"
+        class="w-[95%] h-[40px] rounded-2xl bg-amber-50 mx-auto my-2 flex flex-row gap-2 overflow-hidden">
+          <img draggable="false" class="h-full rounded-2xl" :src="user.photo">
+          <p class="text-lg font-semibold whitespace-nowrap">{{user.name}} {{user.secondname}}</p>
+        </li>
+      </ul>
+      <div class="w-full bg-amber-100 rounded-b-lg h-[20%] flex items-center justify-evenly">
+        <button @click="toConsole" type="button" class="h-[50%] w-4/5 rounded bg-sky-700 hover:shadow-lg transition-all hover:bg-sky-600 text-white font-bold text-center text-lg active:bg-sky-500">To console</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    VK.init({
+      apiId: 	8134471
+    });
+  </script>
+  <script type="text/javascript" src="./index.js"></script>
+<script>
+  Vue.createApp({
+    data() {
+      return {
+        selectedFriends: [],
+        vkButton: true,
+        users: []
+      }
+    },
+    methods: {
+      dragStart(evt)  {
+        evt.target.setAttribute("id", "selectedFriend")
+      },
+      dragEnd(evt) {
+        evt.target.id="";
+      },
+      allowDrop(evt) {
+        evt.preventDefault();
+      },
+      drop(evt) {
+        evt.preventDefault();
+        const movingElement = document.getElementById("selectedFriend");
+        const id = movingElement.dataset.id.split('_');
+        const index = id[0];
+        const list = id[1];
+        let item;
+        if(list === 'loaded') {
+          item = this.users.splice(index, 1)
+        } else {
+          item = this.selectedFriends.splice(index, 1)
+        }
+        if(evt.currentTarget.dataset.list === 'selected') {
+          this.selectedFriends.push(item[0])
+        } else {
+          this.users.push(item[0])
+        }
+      },
+      vkClick() {
+        getFriends()
+          .then((data) => {
+            this.users = data;
+            this.vkButton = false;
+          })
+      },
+      toConsole() {
+        const list = [];
+        this.selectedFriends.forEach((friend) => {
+          list.push(`${friend.name} ${friend.secondname}`)
+        });
+        console.log(list);
+      }
+    }
+  }).mount('#app')
+</script>
+</body>
+</html>
